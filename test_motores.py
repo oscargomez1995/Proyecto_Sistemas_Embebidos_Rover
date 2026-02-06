@@ -14,12 +14,12 @@ def secuencia_final():
         # 1. Por 1 segundo avance rápido
         print(">> Avanzando rápido (1s)")
         motores.mover(VEL_RAPIDA, VEL_RAPIDA, VEL_RAPIDA, VEL_RAPIDA)
-        time.sleep(1)
+        time.sleep(2)
 
         # 2. Por 2 segundos baje su velocidad
         print(">> Avance lento (2s)")
         motores.mover(VEL_LENTA, VEL_LENTA, VEL_LENTA, VEL_LENTA)
-        time.sleep(2)
+        time.sleep(4)
 
         # 3. Por 2 segundos retroceda despacio
         print(">> Retroceso lento (2s)")
