@@ -13,9 +13,6 @@ import os
 import time
 import RPi.GPIO as GPIO
 
-# Agregar rutas a los módulos
-sys.path.append(os.path.join(os.path.dirname(__file__), 'modules'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'Code', 'Server'))
 
 # Importar las clases de los sensores
 from ultrasonic import SensorUltrasonico
