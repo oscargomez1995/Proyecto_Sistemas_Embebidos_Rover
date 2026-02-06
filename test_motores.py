@@ -37,15 +37,30 @@ def secuencia_final():
         motores.mover(-VEL_LENTA, -VEL_LENTA, VEL_LENTA, VEL_LENTA)
         time.sleep(2)
 
+         # 2. Por 2 segundos baje su velocidad
+        print(">> Avance lento (2s)")
+        motores.mover(VEL_LENTA, VEL_LENTA, VEL_LENTA, VEL_LENTA)
+        time.sleep(4)
+        
         # 6. Doblar a la derecha y avance 3 segundos (Velocidad lenta)
         print(">> Giro derecha y avance (3s)")
         # Para girar: Lado izquierdo adelante, lado derecho atrás
         motores.mover(VEL_LENTA, VEL_LENTA, -VEL_LENTA, -VEL_LENTA)
-        time.sleep(3)
+        time.sleep(2)
+
+         # 2. Por 2 segundos baje su velocidad
+        print(">> Avance lento (2s)")
+        motores.mover(VEL_LENTA, VEL_LENTA, VEL_LENTA, VEL_LENTA)
+        time.sleep(4)
 
         # 7. Dar una vuelta por 3 segundos (Rotación sobre su eje)
         print(">> Rotación 360 grados (3s)")
         motores.mover(VEL_LENTA, VEL_LENTA, -VEL_LENTA, -VEL_LENTA)
+        time.sleep(5)
+
+        # 3. Por 2 segundos retroceda despacio
+        print(">> Retroceso lento (2s)")
+        motores.mover(-VEL_LENTA, -VEL_LENTA, -VEL_LENTA, -VEL_LENTA)
         time.sleep(3)
 
         # 8. Detenerse
