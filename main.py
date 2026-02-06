@@ -5,45 +5,40 @@ from modules.ultrasonic import SensorUltrasonico
 from modules.motor_ctrl import ControlMotores
 from modules.brain import CerebroRover
 
-# Configuración de Hardware
 GPIO.setmode(GPIO.BOARD)
 DISTANCIA_COMPARTIDA = 100.0
-LOCK = threading.Lock() # Sincronización obligatoria [cite: 25]
+LOCK = threading.Lock()
+EJECUTANDO = True
 
 def hilo_sensor():
-    """Hilo dedicado a la sensórica """
-    global DISTANCIA_COMPARTIDA
-    sensor = SensorUltrasonico(16, 18) # Pins de ejemplo
-    while True:
+    global DISTANCIA_COMPARTIDA, EJECUTANDO
+    sensor = SensorUltrasonico(16, 18)
+    while EJECUTANDO:
         d = sensor.obtener_distancia()
         with LOCK:
             DISTANCIA_COMPARTIDA = d
         time.sleep(0.05)
 
 def hilo_control():
-    """Hilo dedicado a la lógica y actuadores """
-    motores = ControlMotores({'DIR_IZQ':13, 'DIR_DER':15, 'PWM_IZQ':12, 'PWM_DER':11})
+    global EJECUTANDO
+    motores = ControlMotores()
     cerebro = CerebroRover()
-    while True:
+    while EJECUTANDO:
         with LOCK:
             dist = DISTANCIA_COMPARTIDA
-        
         accion = cerebro.decidir_accion(dist)
-        if accion == "AVANZAR":
-            motores.mover(50, 50)
-        elif accion == "GIRAR":
-            motores.mover(40, -40)
-        else:
-            motores.frenar_suave(40)
+        if accion == "AVANZAR_RAPIDO":
+            motores.mover(3000, 3000, 3000, 3000)
+        elif accion == "FRENAR":
+            motores.frenar_suave()
         time.sleep(0.1)
 
 if __name__ == "__main__":
-    # Inicio de la ejecución concurrente [cite: 22]
     t1 = threading.Thread(target=hilo_sensor, daemon=True)
     t2 = threading.Thread(target=hilo_control, daemon=True)
-    t1.start()
-    t2.start()
+    t1.start(); t2.start()
     try:
         while True: time.sleep(1)
     except KeyboardInterrupt:
+        EJECUTANDO = False
         GPIO.cleanup()
