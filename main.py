@@ -26,11 +26,19 @@ def hilo_control():
     while EJECUTANDO:
         with LOCK:
             dist = DISTANCIA_COMPARTIDA
+        
         accion = cerebro.decidir_accion(dist)
+        
         if accion == "AVANZAR_RAPIDO":
             motores.mover(3000, 3000, 3000, 3000)
         elif accion == "FRENAR":
+            print(f"¡Obstáculo a {dist}cm! Frenando...")
             motores.frenar_suave()
+            # Maniobra de seguridad: retroceder un poco tras frenar
+            motores.mover(-2000, -2000, -2000, -2000)
+            time.sleep(0.5)
+            motores.mover(0, 0, 0, 0)
+        
         time.sleep(0.1)
 
 if __name__ == "__main__":
