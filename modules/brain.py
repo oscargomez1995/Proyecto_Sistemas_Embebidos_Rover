@@ -1,12 +1,15 @@
 class CerebroRover:
     def __init__(self):
-        self.distancia_segura = 25.0 # cm
+        # Umbrales de distancia en centímetros
+        self.distancia_critica = 25.0  # Menos de esto: FRENAR
+        self.distancia_segura = 50.0   # Entre 25 y 50: AVANZAR_LENTO
+                                       # Más de 50: AVANZAR_RAPIDO
 
-    def decidir_accion(self, distancia_actual):
-        """Lógica de navegación básica"""
-        if distancia_actual > self.distancia_segura:
-            return "AVANZAR"
-        elif distancia_actual > 10:
-            return "GIRAR"
+    def decidir_accion(self, distancia):
+        """Asocia la distancia leída con un estado de movimiento"""
+        if distancia <= self.distancia_critica:
+            return "FRENAR"
+        elif distancia <= self.distancia_segura:
+            return "AVANZAR_LENTO"
         else:
-            return "RETROCEDER"
+            return "AVANZAR_RAPIDO"
