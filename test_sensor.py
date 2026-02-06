@@ -9,7 +9,7 @@ pin_trig = 16
 pin_echo = 18
 
 try:
-    sensor = SensorUltrasonico(pin_trig, pin_echo)
+    sensor = SensorUltrasonico(11, 13)
     print(f"--- Probando Sensor HC-SR04 en pines {pin_trig} y {pin_echo} ---")
     print("Presiona Ctrl+C para detener")
     
