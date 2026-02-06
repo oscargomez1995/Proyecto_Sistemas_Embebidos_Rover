@@ -1,27 +1,49 @@
 import threading
 import time
+import RPi.GPIO as GPIO
 from modules.ultrasonic import SensorUltrasonico
+from modules.motor_ctrl import ControlMotores
+from modules.brain import CerebroRover
 
-distancia_global = 100.0
-lock = threading.Lock() # Sincronización obligatoria [cite: 25]
+# Configuración de Hardware
+GPIO.setmode(GPIO.BOARD)
+DISTANCIA_COMPARTIDA = 100.0
+LOCK = threading.Lock() # Sincronización obligatoria [cite: 25]
 
-def hilo_lectura():
-    global distancia_global
-    sensor = SensorUltrasonico(16, 18)
+def hilo_sensor():
+    """Hilo dedicado a la sensórica """
+    global DISTANCIA_COMPARTIDA
+    sensor = SensorUltrasonico(16, 18) # Pins de ejemplo
     while True:
         d = sensor.obtener_distancia()
-        with lock:
-            distancia_global = d
+        with LOCK:
+            DISTANCIA_COMPARTIDA = d
+        time.sleep(0.05)
+
+def hilo_control():
+    """Hilo dedicado a la lógica y actuadores """
+    motores = ControlMotores({'DIR_IZQ':13, 'DIR_DER':15, 'PWM_IZQ':12, 'PWM_DER':11})
+    cerebro = CerebroRover()
+    while True:
+        with LOCK:
+            dist = DISTANCIA_COMPARTIDA
+        
+        accion = cerebro.decidir_accion(dist)
+        if accion == "AVANZAR":
+            motores.mover(50, 50)
+        elif accion == "GIRAR":
+            motores.mover(40, -40)
+        else:
+            motores.frenar_suave(40)
         time.sleep(0.1)
 
 if __name__ == "__main__":
-    # Inicia hilos independientes para sensórica y control [cite: 24]
-    t = threading.Thread(target=hilo_lectura, daemon=True)
-    t.start()
+    # Inicio de la ejecución concurrente [cite: 22]
+    t1 = threading.Thread(target=hilo_sensor, daemon=True)
+    t2 = threading.Thread(target=hilo_control, daemon=True)
+    t1.start()
+    t2.start()
     try:
-        while True:
-            with lock:
-                print(f"Distancia actual: {distancia_global} cm")
-            time.sleep(0.5)
+        while True: time.sleep(1)
     except KeyboardInterrupt:
-        print("Cerrando programa...")
+        GPIO.cleanup()
