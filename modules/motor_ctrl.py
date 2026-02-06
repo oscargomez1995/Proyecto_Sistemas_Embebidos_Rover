@@ -8,22 +8,27 @@ class ControlMotores:
         self.vel_ref = 0
 
     def mover(self, d1, d2, d3, d4):
-        # Mapeo: 0,1 izq_sup | 3,2 izq_inf | 6,7 der_sup | 4,5 der_inf
-        self._set_wheel(0, 1, d1)
-        self._set_wheel(3, 2, d2)
-        self._set_wheel(6, 7, d3)
-        self._set_wheel(4, 5, d4)
+        # Se añade '-' a cada valor para corregir la marcha invertida
+        self._set_wheel(0, 1, -d1) # Frontal Izquierda
+        self._set_wheel(3, 2, -d2) # Trasera Izquierda
+        self._set_wheel(6, 7, -d3) # Frontal Derecha
+        self._set_wheel(4, 5, -d4) # Trasera Derecha
         self.vel_ref = d1
 
     def _set_wheel(self, p1, p2, duty):
         if duty > 0:
-            self.pwm.set_motor_pwm(p1, 0); self.pwm.set_motor_pwm(p2, abs(duty))
+            self.pwm.set_motor_pwm(p1, 0)
+            self.pwm.set_motor_pwm(p2, abs(duty))
         elif duty < 0:
-            self.pwm.set_motor_pwm(p2, 0); self.pwm.set_motor_pwm(p1, abs(duty))
+            self.pwm.set_motor_pwm(p2, 0)
+            self.pwm.set_motor_pwm(p1, abs(duty))
         else:
-            self.pwm.set_motor_pwm(p1, 4095); self.pwm.set_motor_pwm(p2, 4095)
+            # Estado de freno (PWM alto en ambos pines del puente H)
+            self.pwm.set_motor_pwm(p1, 4095)
+            self.pwm.set_motor_pwm(p2, 4095)
 
     def frenar_suave(self):
+        # Rango descendente para evitar tirones mecánicos
         for v in range(abs(self.vel_ref), -1, -500):
             p = v if self.vel_ref > 0 else -v
             self.mover(p, p, p, p)
