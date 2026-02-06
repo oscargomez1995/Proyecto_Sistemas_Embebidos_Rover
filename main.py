@@ -3,18 +3,17 @@ import time
 import RPi.GPIO as GPIO
 from modules.ultrasonic import SensorUltrasonico
 from modules.motor_ctrl import ControlMotores
-from modules.brain import CerebroRover
 
 # --- Configuración de Hardware ---
 GPIO.setmode(GPIO.BOARD)
 
-# Sincronización obligatoria para la rúbrica
+# Variables compartidas (Rúbrica de Sincronización)
 DISTANCIA_COMPARTIDA = 100.0
 LOCK = threading.Lock()
 EJECUTANDO = True
 
 def hilo_sensor():
-    """Hilo dedicado exclusivamente a la lectura del sensor HC-SR04"""
+    """Hilo 1: Monitoreo constante del sensor ultrasónico"""
     global DISTANCIA_COMPARTIDA, EJECUTANDO
     sensor = SensorUltrasonico(16, 18)
     
@@ -23,59 +22,88 @@ def hilo_sensor():
             d = sensor.obtener_distancia()
             with LOCK:
                 DISTANCIA_COMPARTIDA = d
-            time.sleep(0.05) # Muestreo a 20Hz
+            time.sleep(0.05) 
         except Exception as e:
             print(f"Error en sensor: {e}")
 
-def hilo_control():
-    """Hilo de decisión y actuación sobre motores PCA9685"""
+def hilo_coreografia():
+    """Hilo 2: Ejecución de la secuencia de movimientos (Test B)"""
     global EJECUTANDO
     motores = ControlMotores()
-    cerebro = CerebroRover()
     
-    while EJECUTANDO:
-        try:
-            # Lectura segura de la variable compartida
-            with LOCK:
-                dist = DISTANCIA_COMPARTIDA
-            
-            accion = cerebro.decidir_accion(dist)
-            
-            if accion == "AVANZAR_RAPIDO":
-                # Potencia alta para tramos despejados
-                motores.mover(3500, 3500, 3500, 3500)
-            
-            elif accion == "AVANZAR_LENTO":
-                # Potencia reducida para aproximación
-                motores.mover(1800, 1800, 1800, 1800)
-            
-            elif accion == "FRENAR":
-                print(f"¡Obstáculo crítico detectado a {dist}cm!")
-                motores.frenar_suave()
-                # Maniobra de escape: retroceder un poco
-                motores.mover(-2000, -2000, -2000, -2000)
-                time.sleep(0.5)
-                motores.mover(0, 0, 0, 0)
-            
-            time.sleep(0.1) # Ciclo de control
-        except Exception as e:
-            print(f"Error en control: {e}")
+    VEL_RAPIDA = 3800
+    VEL_LENTA = 1800
 
-if __name__ == "__main__":
-    # Inicio de la ejecución concurrente
-    t_sensor = threading.Thread(target=hilo_sensor, daemon=True)
-    t_control = threading.Thread(target=hilo_control, daemon=True)
-    
-    print("--- ROVER INICIADO: Modo Concurrente con PCA9685 ---")
-    t_sensor.start()
-    t_control.start()
+    def mover_seguro(v1, v2, v3, v4, duracion):
+        """Función auxiliar para mover con chequeo de obstáculo"""
+        inicio = time.time()
+        while time.time() - inicio < duracion and EJECUTANDO:
+            with LOCK:
+                # Parada de emergencia si hay un obstáculo a menos de 15cm
+                if DISTANCIA_COMPARTIDA < 15:
+                    print(f"¡EMERGENCIA! Obstáculo a {DISTANCIA_COMPARTIDA}cm. Abortando.")
+                    motores.mover(0,0,0,0)
+                    return False 
+            
+            motores.mover(v1, v2, v3, v4)
+            time.sleep(0.1)
+        return True
+
+    print("--- INICIANDO COREOGRAFÍA MULTIHILO ---")
     
     try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nDeteniendo sistema de forma segura...")
+        # 1. Avance rápido (1s real - ajustado a 2s según tu lógica de sleep)
+        print(">> Avanzando rápido")
+        if not mover_seguro(VEL_RAPIDA, VEL_RAPIDA, VEL_RAPIDA, VEL_RAPIDA, 2): return
+
+        # 2. Avance lento (4s)
+        print(">> Avance lento")
+        if not mover_seguro(VEL_LENTA, VEL_LENTA, VEL_LENTA, VEL_LENTA, 4): return
+
+        # 3. Retroceso lento (2s)
+        print(">> Retroceso lento")
+        if not mover_seguro(-VEL_LENTA, -VEL_LENTA, -VEL_LENTA, -VEL_LENTA, 2): return
+
+        # 4. Retroceso rápido (1s)
+        print(">> Retroceso rápido")
+        if not mover_seguro(-VEL_RAPIDA, -VEL_RAPIDA, -VEL_RAPIDA, -VEL_RAPIDA, 1): return
+
+        # 5. Giro Izquierda (2s)
+        print(">> Giro izquierda")
+        if not mover_seguro(-VEL_LENTA, -VEL_LENTA, VEL_LENTA, VEL_LENTA, 2): return
+
+        # 6. Giro Derecha (2s)
+        print(">> Giro derecha")
+        if not mover_seguro(VEL_LENTA, VEL_LENTA, -VEL_LENTA, -VEL_LENTA, 2): return
+
+        # 7. Rotación final (5s)
+        print(">> Rotación final")
+        if not mover_seguro(VEL_LENTA, VEL_LENTA, -VEL_LENTA, -VEL_LENTA, 5): return
+
+        print("--- COREOGRAFÍA FINALIZADA EXITOSAMENTE ---")
+
+    except Exception as e:
+        print(f"Error en coreografía: {e}")
+    finally:
+        motores.mover(0, 0, 0, 0)
         EJECUTANDO = False
-        # Limpieza obligatoria para proteger el hardware
+
+if __name__ == "__main__":
+    # Creación de hilos
+    t_sensor = threading.Thread(target=hilo_sensor, daemon=True)
+    t_coreo = threading.Thread(target=hilo_coreografia, daemon=True)
+    
+    print("Sistema Rover Concurrente iniciado...")
+    t_sensor.start()
+    t_coreo.start()
+    
+    try:
+        # Mantener el main vivo mientras la coreografía se ejecuta
+        while EJECUTANDO:
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        print("\n[!] Interrupción detectada. Limpiando...")
+    finally:
+        EJECUTANDO = False
         GPIO.cleanup()
-        print("GPIO liberado. Programa finalizado.")
+        print("Sistema apagado.")
