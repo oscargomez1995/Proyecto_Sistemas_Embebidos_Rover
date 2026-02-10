@@ -23,6 +23,7 @@ from lib.buzzer import Buzzer
 from lib.infrared import Infrared
 from lib.leds import Freenove_SPI_LedPixel
 from lib.motor import Ordinary_Car
+from lib.ultrasonido import Ultrasonic
 
 # ------------------------------------------------
 # Variables compartidas y mecanismos de sincronización
@@ -39,11 +40,11 @@ COLA_OBSTACULO = queue.Queue(maxsize=10)
 # ------------------------------------------------
 # Parámetros de configuración
 # ------------------------------------------------
-UMBRAL_OBSTACULO_CM = 15.0
+UMBRAL_OBSTACULO_CM = 10
 
 # Velocidades de los motores
-VEL_ADELANTE = 2200
-VEL_GIRO = 2200
+VEL_ADELANTE = 1000
+VEL_GIRO = 1000
 
 # Tiempo aproximado para girar 90 grados (ajustable)
 TIEMPO_GIRO_90 = 0.55
@@ -141,8 +142,8 @@ def hilo_control():
 
     def avanzar():
         motores.set_motor_model(
-            VEL_ADELANTE, VEL_ADELANTE,
-            VEL_ADELANTE, VEL_ADELANTE
+            -VEL_ADELANTE, -VEL_ADELANTE,
+            -VEL_ADELANTE, -VEL_ADELANTE
         )
 
     def girar_izquierda_90():
