@@ -118,6 +118,7 @@ El desarrollo se realizó usando Git y GitHub:
 
 Se realizaron múltiples pruebas debido a fallos iniciales de sensores y periféricos.  
 Las carpetas adicionales documentan este proceso de validación previo al sistema final.
+
 Documentación de errores:
 - [https://drive.google.com/file/d/1uqKrghAfRUxmyZ1OerxdNu-eD6vNPyen/view?usp=sharing](https://drive.google.com/file/d/1uqKrghAfRUxmyZ1OerxdNu-eD6vNPyen/view?usp=sharing)
 - [https://drive.google.com/file/d/1vBQcYWe0UaNwVaal8ajDtcvk03P-tFiL/view?usp=sharing](https://drive.google.com/file/d/1vBQcYWe0UaNwVaal8ajDtcvk03P-tFiL/view?usp=sharing)
