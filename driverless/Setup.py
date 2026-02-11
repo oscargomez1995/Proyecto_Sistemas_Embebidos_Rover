@@ -20,7 +20,7 @@ def check_and_install(package):
             return False
 
 def apt_install(package):
-    """Instala un paquete del sistema usando apt-get (gestor de paquetes de Debian/Raspbian)."""
+    """Instala un paquete del sistema usando apt-get"""
     install_command = f"sudo apt-get install -y {package}"
     try:
         subprocess.run(install_command, shell=True, check=True)
