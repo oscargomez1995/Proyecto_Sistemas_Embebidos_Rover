@@ -123,3 +123,8 @@ Documentación de errores:
 - [https://drive.google.com/file/d/1uqKrghAfRUxmyZ1OerxdNu-eD6vNPyen/view?usp=sharing](https://drive.google.com/file/d/1uqKrghAfRUxmyZ1OerxdNu-eD6vNPyen/view?usp=sharing)
 - [https://drive.google.com/file/d/1vBQcYWe0UaNwVaal8ajDtcvk03P-tFiL/view?usp=sharing](https://drive.google.com/file/d/1vBQcYWe0UaNwVaal8ajDtcvk03P-tFiL/view?usp=sharing)
 - [https://drive.google.com/file/d/1IGcqZqDGx-q0IXWn_8Yr6obN28EL-Lay/view?usp=sharing](https://drive.google.com/file/d/1IGcqZqDGx-q0IXWn_8Yr6obN28EL-Lay/view?usp=sharing)
+
+En los tres vídeos se muestran las pruebas hechas para comprobar, por un lado, el funcionamiento de los elementos del robotijo (como, por ejemplo, los sensores), y por otro, los diferentes movimientos que este tenía que llevar a cabo a partir del código escrito. Se tratan de las pruebas iniciales hechas al comienzo del trabajo, intentando familiarizarnos con el robotijo y la forma de trbajar con este.
+En el primer vídeo observamos que el robotijo choca, sin saber el motivo, pudiendo ser o bien por culpa del código, o bien por algún problema de los periféricos o sensores.
+En el segundo comprobamos que había un error en el sensor ultrasónico de forma que este siempre daba la misma lectura, impidiendo que el robotijo actuara correctamente, ya que trabaja de forma acorde a lo que el sensor detecta.
+En el tercer vídeo comienza a hacer rectificaciones, pero estas no se corresponden a la detección de objetos, sino a la evolución en el código escrito, dando así respuesta a los cambios hechos y a lo que se pretendía conseguir.
