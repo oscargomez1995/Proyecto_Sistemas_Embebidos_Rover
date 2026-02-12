@@ -27,16 +27,16 @@ El código final y funcional del proyecto se encuentra en la carpeta **driverles
 
 PROYECTO_ROVER/<br>
 ├── driverless/<br>
-│   ├── lib/<br>
+│   ├── lib/<br>                  ## Librerías usadas
 │   │   ├── buzzer.py<br>
 │   │   ├── infrared.py<br>
 │   │   ├── leds.py<br>
 │   │   ├── motor.py<br>
 │   │   ├── pca9685.py<br>
 │   │   └── ultrasonido.py<br>
-│   ├── main.py<br>
-│   └── Setup.py<br>
-├── tests/<br>
+│   ├── main.py<br>               ## Codigo principal para ejecutar
+│   └── Setup.py<br>              ## Instalación de recursos y librerías
+├── tests/<br>                    ## Pruebas y test previos
 ├── modules/<br>
 └── README.md<br>
 
