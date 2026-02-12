@@ -7,11 +7,11 @@ Hilos:
 - Hilo 3: LEDs siempre encendidos (animación tipo wheel)
 - Hilo 4: Sensores infrarrojos (opcional, solo lectura)
 
-Cumple rúbrica:
-- Concurrencia con hilos
-- Sincronización con Lock y Queue
-- Separación clara de tareas
-
+Correcciones incluidas:
+- El control usa la distancia DEL EVENTO (d) en vez de DISTANCIA_CM (evita "OBSTACULO a 300cm")
+- Filtro de lecturas inválidas del ultrasonido (None, <=0, o demasiado altas tipo 300)
+- Cooldown anti-rebote para no encadenar evasiones
+- Limpieza de cola tras manejar un evento (descarta eventos viejos acumulados)
 """
 
 import time
@@ -35,25 +35,35 @@ LOCK_ESTADO = threading.Lock()
 EVENTO_STOP = threading.Event()
 
 # Cola para notificar detección de obstáculo (thread-safe)
-COLA_OBSTACULO = queue.Queue(maxsize=10)
+COLA_OBSTACULO = queue.Queue(maxsize=1)
 
 # ------------------------------------------------
 # Parámetros de configuración
 # ------------------------------------------------
-UMBRAL_OBSTACULO_CM = 10
+UMBRAL_OBSTACULO_CM = 60
+
+# Rango válido de medición (ajusta según tu sensor/lib; 300 suele ser "sin eco")
+DISTANCIA_MIN_VALIDA = 2.0
+DISTANCIA_MAX_VALIDA = 250.0
 
 # Velocidades de los motores
 VEL_ADELANTE = 1000
 VEL_GIRO = 1000
 
+# Tiempo aproximado para retroceder (ajustable)
+TIEMPO_RETROCEDER = 0.2
+
 # Tiempo aproximado para girar 90 grados (ajustable)
-TIEMPO_GIRO_90 = 0.55
+TIEMPO_GIRO_90 = 1.0
 
 # Periodos de ejecución
 PERIODO_SENSOR = 0.05
 PERIODO_CONTROL = 0.05
 PERIODO_LED = 0.01
 PERIODO_IR = 0.10
+
+# Anti-rebote: tiempo mínimo entre evasiones
+COOLDOWN_OBSTACULO_S = 1.0
 
 
 # ------------------------------------------------
@@ -67,20 +77,35 @@ def hilo_ultrasonico():
         while not EVENTO_STOP.is_set():
             distancia = sensor.get_distance()
 
-            if distancia is not None:
-                with LOCK_ESTADO:
-                    DISTANCIA_CM = float(distancia)
+            # Filtrar lecturas inválidas / fuera de rango (típico 300 = sin eco)
+            if (
+                distancia is None
+                or not isinstance(distancia, (int, float))
+                or distancia < DISTANCIA_MIN_VALIDA
+                or distancia > DISTANCIA_MAX_VALIDA
+            ):
+                time.sleep(PERIODO_SENSOR)
+                continue
 
-                # Notificar obstáculo si está muy cerca
-                if distancia < UMBRAL_OBSTACULO_CM:
-                    try:
-                        COLA_OBSTACULO.put_nowait(("OBSTACULO", time.time(), distancia))
-                    except queue.Full:
-                        pass
+            # Actualizar variable compartida SOLO con datos válidos
+            with LOCK_ESTADO:
+                DISTANCIA_CM = float(distancia)
+
+            # Notificar obstáculo si está muy cerca
+            if distancia < UMBRAL_OBSTACULO_CM:
+                try:
+                    # Guardamos la distancia del evento en la cola
+                    COLA_OBSTACULO.put_nowait(("OBSTACULO", time.time(), float(distancia)))
+                except queue.Full:
+                    pass
 
             time.sleep(PERIODO_SENSOR)
+
     finally:
-        sensor.close()
+        try:
+            sensor.close()
+        except Exception:
+            pass
 
 
 # ------------------------------------------------
@@ -97,7 +122,10 @@ def hilo_infrarrojo():
                 VALOR_IR = int(valor)
             time.sleep(PERIODO_IR)
     finally:
-        ir.close()
+        try:
+            ir.close()
+        except Exception:
+            pass
 
 
 # ------------------------------------------------
@@ -146,6 +174,14 @@ def hilo_control():
             -VEL_ADELANTE, -VEL_ADELANTE
         )
 
+    def retroceder():
+        motores.set_motor_model(
+            VEL_ADELANTE, VEL_ADELANTE,
+            VEL_ADELANTE, VEL_ADELANTE
+        )
+        time.sleep(TIEMPO_RETROCEDER)
+        detener()
+
     def girar_izquierda_90():
         motores.set_motor_model(
             -VEL_GIRO, -VEL_GIRO,
@@ -161,6 +197,16 @@ def hilo_control():
             buzzer.set_state(False)
             time.sleep(0.08)
 
+    def limpiar_cola_obstaculo():
+        # Descarta eventos viejos acumulados
+        while True:
+            try:
+                COLA_OBSTACULO.get_nowait()
+            except queue.Empty:
+                break
+
+    ultimo_evento = 0.0
+
     try:
         print("[CONTROL] Rover avanzando...")
         avanzar()
@@ -172,23 +218,34 @@ def hilo_control():
                 time.sleep(PERIODO_CONTROL)
                 continue
 
-            if evento == "OBSTACULO":
-                with LOCK_ESTADO:
-                    distancia_actual = DISTANCIA_CM
+            if evento != "OBSTACULO":
+                continue
 
-                print(f"[EMERGENCIA] Obstáculo a {distancia_actual:.1f} cm")
+            # Anti-rebote / cooldown para evitar bucle de evasión
+            ahora = time.time()
+            if (ahora - ultimo_evento) < COOLDOWN_OBSTACULO_S:
+                continue
+            ultimo_evento = ahora
 
-                detener()
+            # Usar la distancia del EVENTO (d), no la distancia global (que puede ser 300)
+            print(f"[EMERGENCIA] Obstáculo detectado a {d:.1f} cm")
 
-                buzzer.set_state(True)
-                time.sleep(0.15)
-                buzzer.set_state(False)
+            detener()
+            retroceder()
 
-                alerta_buzzer()
-                girar_izquierda_90()
+            # beep rápido + alerta
+            buzzer.set_state(True)
+            time.sleep(0.15)
+            buzzer.set_state(False)
 
-                time.sleep(0.1)
-                avanzar()
+            alerta_buzzer()
+            girar_izquierda_90()
+
+            # Limpia cola para no re-ejecutar maniobras por eventos viejos
+            limpiar_cola_obstaculo()
+
+            time.sleep(0.1)
+            avanzar()
 
     finally:
         try:
