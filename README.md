@@ -132,3 +132,7 @@ En el primer vídeo observamos que el robotijo choca, sin saber el motivo, pudie
 En el segundo comprobamos que había un error en el sensor ultrasónico de forma que este siempre daba la misma lectura, impidiendo que el robotijo actuara correctamente, ya que trabaja de forma acorde a lo que el sensor detecta.
 
 En el tercer vídeo comienza a hacer rectificaciones, pero estas no se corresponden a la detección de objetos, sino a la evolución en el código escrito, dando así respuesta a los cambios hechos y a lo que se pretendía conseguir.
+
+LINK VIDEO FINAL: - [https://universidadevigo.sharepoint.com/:v:/s/Pruebasfinales-Robotijo/IQBOkNvOLkqYRJdcHqFpeJS1AbDQTLuyp-Syn9kBZ8cHjcs?e=I9gSOQ](https://universidadevigo.sharepoint.com/:v:/s/Pruebasfinales-Robotijo/IQBOkNvOLkqYRJdcHqFpeJS1AbDQTLuyp-Syn9kBZ8cHjcs?e=I9gSOQ)
+
+Este video es el mismo que está subido en Moovi, en el se realizan las pruebas finales para escoger como esquivar mejor los objetos.
