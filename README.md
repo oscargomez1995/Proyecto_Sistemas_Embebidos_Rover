@@ -36,6 +36,7 @@ PROYECTO_ROVER/<br>
 │   │   └── ultrasonido.py<br>
 │   ├── main.py         ## Codigo principal para ejecutar<br>   
 │   └── Setup.py        ## Instalación de recursos y librerías<br>
+│
 ├── tests/              ## Pruebas y test previos<br> 
 ├── modules/<br>
 └── README.md<br>
